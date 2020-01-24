@@ -1,0 +1,17 @@
+#!/bin/bash
+
+rankmirrors /etc/pacman.d/blackarch-mirrorlist > blackarch-mirrorlist-sort
+
+temp="templist"
+touch $temp
+tail -91 blackarch-mirrorlist-sort > $temp
+sed -i 's/Server = //g' $temp
+
+while read -r line
+do
+	if [[ ! -z $(curl -Is --connect-timeout 10 $(echo $line | sed 's/.*:\/\//https:\/\//' | sed 's/.\$repo/\/blackarch/' | sed 's/.\$arch/\/x86_64\//') | head -1 | grep 200) ]] ; then
+		echo "Server = $line"
+	fi
+done < $temp
+
+rm $temp
